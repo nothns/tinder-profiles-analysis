@@ -12,6 +12,8 @@ FROM likes
 GROUP BY id) as j on users.id = j.id
 SET users.agr_total_likes = j.agr_total_likes_t;
 
+ALTER TABLE users DROP COLUMN agr_total_likes;
+
 CREATE PROCEDURE calc_sum(
     IN new_column_name VARCHAR(255),
     IN table_name VARCHAR(255)
@@ -43,4 +45,8 @@ CALL calc_sum('agr_total_app_opens', 'app_opens');
 CALL calc_sum('agr_total_messages_sent', 'messages_sent');
 CALL calc_sum('agr_total_messages_recieved', 'messages_recieved');
 
----
+--- PHASE 1 DATA COMPLETE
+
+CREATE TABLE phase_1 AS SELECT * FROM users;
+
+SELECT * FROM phase_1;

@@ -1,15 +1,26 @@
 -- Active: 1687564679455@@127.0.0.1@3306@tinder_profiles_analysis
 -- Active: 1687564679455@@127.0.0.1@3306@tinder_profiles_analysis
 
-DROP TABLE IF EXISTS matches, app_opens, messages_received, messages_sent, likes, passes, users, conversations, conversations_raw;
+DROP TABLE IF EXISTS matches_raw, messagesreceived_raw, messagessent_raw, swipelikes_raw, swipepasses_raw, users_raw, appopens_raw;
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS matches, app_opens, messages_recieved, messages_sent, likes, passes, users, conversations, conversations_raw;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- formatting users
 
-DROP TABLE IF EXISTS users;
+SELECT * FROM users;
 
 CREATE TABLE users AS
 SELECT 
     _id AS id, 
+    nrOfConversations AS number_of_conversations,
+    longestConversation AS longest_conversation,
+    longestConversationInDays AS longest_conversation_days,
+    averageConversationLength AS average_conversation_length,
+    averageConversationLengthInDays AS average_conversation_length_days,
+    medianConversationLength AS median_conversation_length,
+    medianConversationLengthInDays AS median_conversation_length_days,
+    nrOfOneMessageConversations AS number_of_one_message_conversations,
     nrOfGhostingsAfterInitialMessage AS ghostings_after_initial_message,
     STR_TO_DATE(birthDate, '%Y-%m-%dT%H:%i:%s.%fZ') AS birthday,
     ageFilterMin AS age_filter_min,
@@ -46,6 +57,10 @@ FROM users_raw;
 
 ALTER TABLE users
     MODIFY COLUMN id CHAR(32),
+    MODIFY COLUMN number_of_conversations INT,
+    MODIFY COLUMN longest_conversation INT,
+    MODIFY COLUMN median_conversation_length INT,
+    MODIFY COLUMN number_of_one_message_conversations INT,
     MODIFY COLUMN ghostings_after_initial_message INT,
     MODIFY COLUMN age_filter_min INT,
     MODIFY COLUMN age_filter_max INT,
