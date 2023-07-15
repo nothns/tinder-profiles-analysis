@@ -45,7 +45,28 @@ CALL calc_sum('agr_total_app_opens', 'app_opens');
 CALL calc_sum('agr_total_messages_sent', 'messages_sent');
 CALL calc_sum('agr_total_messages_recieved', 'messages_recieved');
 
+ALTER TABLE users ADD COLUMN active_till DATE;
+
+UPDATE users
+JOIN (
+    SELECT id, MAX(date) as active_till 
+    FROM (
+        SELECT * FROM passes WHERE value > 0
+    ) as t 
+    GROUP BY id
+) as t 
+ON t.id = users.id
+SET users.active_till = t.active_till;
+
+ALTER TABLE users ADD COLUMN days_active INT;
+UPDATE users
+SET days_active = DATEDIFF(active_till, created_date);
+
+SELECT  * FROM users;
+
 --- PHASE 1 DATA COMPLETE
+
+DROP TABLE IF EXISTS phase_1;
 
 CREATE TABLE phase_1 AS SELECT * FROM users;
 

@@ -1,9 +1,9 @@
 -- Active: 1687564679455@@127.0.0.1@3306@tinder_profiles_analysis
 -- Active: 1687564679455@@127.0.0.1@3306@tinder_profiles_analysis
 
-DROP TABLE IF EXISTS matches_raw, messagesreceived_raw, messagessent_raw, swipelikes_raw, swipepasses_raw, users_raw, appopens_raw;
+DROP TABLE IF EXISTS matches_raw, messagesreceived_raw, messagessent_raw, swipelikes_raw, swipepasses_raw, users_raw, appopens_raw, conversations_raw;
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS matches, app_opens, messages_recieved, messages_sent, likes, passes, users, conversations, conversations_raw;
+DROP TABLE IF EXISTS matches, app_opens, messages_recieved, messages_sent, likes, passes, users, conversations;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- formatting users
@@ -33,8 +33,8 @@ SELECT
         WHEN education = 'Has no high school or college education' THEN 1
     END AS education,
     CASE
-        WHEN interestedIn = 'M' THEN 0
-        WHEN interestedIn = 'F' THEN 1
+        WHEN gender = 'M' THEN 0
+        WHEN gender = 'F' THEN 1
         ELSE NULL
     END AS gender,
     CASE

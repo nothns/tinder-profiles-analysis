@@ -1,0 +1,696 @@
+---
+title: "Phase 1: Exploratory Data Analysis"
+output:
+  html_document:
+    toc: true
+    theme: united
+---
+
+# Phase 1: Exploratory Data Analysis
+
+## Importing
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+df <- read_csv("phase_1_raw.csv")
+```
+
+```{r}
+colnames(df)
+```
+
+## Demographic
+
+### Gender
+
+```{r}
+df$gender <- factor(df$gender)
+```
+
+```{r}
+ggplot(df) +
+  geom_bar(aes(x = gender)) + 
+  labs(x = "Gender", y = "Count", title = "Gender Distribution") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women")) + 
+  geom_text(stat='count', aes(x = gender, label=..count..), vjust=-0.3)
+```
+
+```{r}
+df$interested_in <- factor(df$interested_in)
+```
+
+```{r}
+ggplot(df) +
+  geom_bar(aes(x = interested_in)) + 
+  labs(x = "Gender", y = "Count", title = "Gender Preference Distribution") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women", "2" = "Both")) + 
+  geom_text(stat='count', aes(x = interested_in, label=..count..), vjust=-0.3)
+```
+
+Let's just filter out the nulls.
+
+```{r}
+df <- filter(df, !is.na(gender))
+```
+
+```{r}
+ggplot(df) +
+  geom_bar(aes(x = gender)) + 
+  labs(x = "Gender", y = "Count", title = "Gender Distribution") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women")) + 
+  geom_text(stat='count', aes(x = gender, label=..count..), vjust=-0.3)
+```
+
+### Age
+
+```{r}
+df <- df %>%
+  mutate(start_age = as.Date(df$created_date) - birthday) %>%
+  mutate(start_age = as.integer(start_age / 365.25)) %>%
+  mutate(end_age = as.integer(start_age+days_active / 365.25)) %>%
+  mutate(average_age = as.integer((start_age+end_age)/2))
+```
+
+```{r}
+df <- filter(df, start_age >= 18 & start_age <= 51)
+```
+
+```{r}
+ggplot(df) +
+  geom_histogram(aes(x = average_age, fill = gender), binwidth = 1) +
+  labs(x = "Age", y = "Count", title = "Average Age Distribution") + 
+  scale_fill_discrete(labels=c('Male', 'Female'))
+```
+
+```{r}
+ggplot(df) +
+  geom_histogram(aes(x = start_age, fill = gender), binwidth = 1) +
+  labs(x = "Age", y = "Count", title = "Start Age Distribution") + 
+  scale_fill_discrete(labels=c('Male', 'Female'))
+```
+
+```{r}
+ggplot(df) +
+  geom_histogram(aes(x = end_age, fill = gender), binwidth = 1) +
+  labs(x = "Age", y = "Count", title = "End Age Distribution") + 
+  scale_fill_discrete(labels=c('Male', 'Female'))
+```
+
+## Age Filter
+
+```{r}
+df %>%
+  filter(gender == 0) %>%
+  mutate(age_filter_max = ifelse(age_filter_max >= 80, NA, age_filter_max)) %>%
+  ggplot() + 
+  geom_line(aes(x = average_age, y = average_age)) +
+  geom_smooth(aes(x = average_age, y = age_filter_min), method='lm', formula= y~x) + 
+  geom_smooth(aes(x = average_age, y = age_filter_max), method='lm', formula= y~x)
+```
+
+```{r}
+df %>%
+  filter(gender == 1) %>%
+  mutate(age_filter_max = ifelse(age_filter_max >= 80, NA, age_filter_max)) %>%
+  ggplot() + 
+  geom_line(aes(x = average_age, y = average_age)) +
+  geom_smooth(aes(x = average_age, y = age_filter_min), method='lm', formula= y~x) + 
+  geom_smooth(aes(x = average_age, y = age_filter_max), method='lm', formula= y~x)
+```
+
+## Matches & Likes
+
+### Match Percentage by Gender
+
+```{r}
+df <- df %>%
+  mutate(match_p = agr_total_matches/(agr_total_likes+agr_total_matches))
+```
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = gender, y = match_p)) +
+  scale_y_continuous(limits = c(0, 0.5)) +
+  labs(x = "Gender", y = "Match Probability", title = "Match Probability") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women"))
+```
+
+```{r}
+ggplot(df) +
+  geom_violin(aes(x = gender, y = match_p)) +
+  scale_y_continuous(limits = c(0, 0.5)) +
+  labs(x = "Gender", y = "Match Probability", title = "Match Probability") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women"))
+```
+
+### Like Percentage by Gender
+
+```{r}
+df <- df %>%
+  mutate(likes_p = agr_total_likes/(agr_total_likes+agr_total_passes))
+```
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = gender, y = likes_p)) +
+  labs(x = "Gender", y = "Like Percentage", title = "Like Percentage") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women"))
+```
+
+```{r}
+ggplot(df) +
+  geom_violin(aes(x = gender, y = likes_p)) +
+  labs(x = "Gender", y = "Like Percentage", title = "Like Percentage") +
+  scale_x_discrete(labels = c("0" = "Men", "1" = "Women"))
+```
+
+### Match Percentage by Age
+
+```{r}
+filter(df, gender == 0) %>%
+  ggplot() +
+  geom_smooth(aes(x = average_age, y = match_p))
+```
+
+```{r}
+filter(df, gender == 1) %>% 
+  ggplot() +
+  geom_smooth(aes(x = average_age, y = match_p), color = "red")
+```
+
+### Like Percentage by Age
+
+```{r}
+filter(df, gender == 0) %>%
+ggplot() +
+  geom_smooth(aes(x = average_age, y = likes_p))
+```
+
+```{r}
+filter(df, gender == 1) %>%
+ggplot() +
+  geom_smooth(aes(x = average_age, y = likes_p), color = "red")
+```
+
+### App Opens vs Total Days Active \*
+
+```{r}
+ggplot(df, aes(x = days_active, y = agr_total_app_opens)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+### Match Percentage by Days Active \*
+
+```{r}
+ggplot(df, aes(x = days_active, y = match_p)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+### Like Percentage by Days Active \*
+
+```{r}
+ggplot(df, aes(x = days_active, y = likes_p)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+```
+
+### Match Percentage by App Opens \*
+
+```{r}
+ggplot(df, aes(x = agr_total_app_opens, y = match_p)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot with Regression Line")
+```
+
+### Like Percentage by App Opens \*
+
+```{r}
+ggplot(df, aes(x = agr_total_app_opens, y =likes_p)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Scatter Plot with Regression Line")
+```
+
+## Messages Sent / Received
+
+### Sent Ratio by Gender
+
+```{r}
+df <- df %>%
+  mutate(sent_recieved_ratio = agr_total_messages_sent/agr_total_messages_recieved)
+```
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = gender, y = sent_recieved_ratio)) + 
+  scale_y_continuous(limits = c(0,2))
+```
+
+```{r}
+ggplot(df) +
+  geom_violin(aes(x = gender, y = sent_recieved_ratio)) + 
+  scale_y_continuous(limits = c(0,2))
+```
+
+### Sent Ratio by Match Percentage
+
+```{r}
+ggplot(df, aes(x = match_p, y = sent_recieved_ratio)) +
+  geom_smooth(method='lm', formula= y~x) +
+  scale_y_continuous(limits = c(0,2))
+```
+
+```{r}
+filter(df, gender == 0) %>%
+ggplot(aes(x = match_p, y = sent_recieved_ratio)) +
+  geom_smooth(method='lm', formula= y~x) +
+  scale_y_continuous(limits = c(0,2))
+```
+
+```{r}
+filter(df, gender == 1) %>%
+ggplot(aes(x = match_p, y = sent_recieved_ratio)) +
+  geom_smooth(method='lm', formula= y~x, color = "red") +
+  scale_y_continuous(limits = c(0,2))
+```
+
+### Sent Ratio by Like Percentage
+
+```{r}
+ggplot(df, aes(x = likes_p, y = sent_recieved_ratio)) +
+  geom_smooth(method='lm', formula= y~x) +
+  scale_y_continuous(limits = c(0,2))
+```
+
+```{r}
+filter(df, gender == 0) %>%
+ggplot(aes(x = likes_p, y = sent_recieved_ratio)) +
+  geom_smooth(method='lm', formula= y~x) +
+  scale_y_continuous(limits = c(0,2))
+```
+
+```{r}
+filter(df, gender == 1) %>%
+ggplot(aes(x = likes_p, y = sent_recieved_ratio)) +
+  geom_smooth(method='lm', formula= y~x) +
+  scale_y_continuous(limits = c(0,2))
+```
+
+## Number of Conversations
+
+```{r}
+df <- mutate(df, conversation_match_ratio = number_of_conversations/agr_total_matches)
+```
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = gender, y = conversation_match_ratio)) +
+  scale_y_continuous(limits = c(0,2))
+```
+
+```{r}
+ggplot(df, aes(x = match_p, y = conversation_match_ratio)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+## One Message Conversations
+
+### One Message by Gender
+
+```{r}
+df <- mutate(df, one_message_p = number_of_one_message_conversations/number_of_conversations)
+```
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = gender, y = one_message_p))
+```
+
+```{r}
+ggplot(df, aes(x = match_p, y = conversation_match_ratio)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+ggplot(df) +
+  geom_violin(aes(x = gender, y = one_message_p))
+```
+
+### One Message by Match Percentage
+
+```{r}
+ggplot(df, aes(x = match_p, y = one_message_p)) +
+  geom_smooth(method = "lm", formula= y~x) +
+  scale_y_continuous(limits = c(0,0.5))
+```
+
+```{r}
+filter(df, gender == 1) %>%
+  ggplot(aes(x = match_p, y = one_message_p)) +
+  geom_smooth(method = "lm", formula= y~x) +
+  scale_y_continuous(limits = c(0,0.5))
+```
+
+```{r}
+filter(df, gender == 0) %>%
+  ggplot(aes(x = match_p, y = one_message_p)) +
+  geom_smooth(method = "lm", formula= y~x) +
+  scale_y_continuous(limits = c(0,0.5))
+```
+
+### One Message by Like Percentage
+
+```{r}
+ggplot(df, aes(x = likes_p, y = one_message_p)) +
+  geom_smooth(method = "lm", formula= y~x) +
+  scale_y_continuous(limits = c(0,0.5))
+```
+
+```{r}
+filter(df, gender == 0) %>%
+  ggplot(aes(x = likes_p, y = one_message_p)) +
+  geom_smooth(method = "lm", formula= y~x) +
+  scale_y_continuous(limits = c(0,0.5))
+```
+
+```{r}
+filter(df, gender == 1) %>%
+  ggplot(aes(x = likes_p, y = one_message_p)) +
+  geom_smooth(method = "lm", formula= y~x) +
+  scale_y_continuous(limits = c(0,0.5))
+```
+
+### One Message by Age
+
+```{r}
+ggplot(df, aes(x = average_age, y = average_conversation_length)) +
+  geom_smooth() +
+  geom_point() +
+  scale_y_continuous(limits = c(0,20))
+```
+
+## Conversations Length in Messages
+
+### Conversation Length by Gender
+
+```{r}
+ggplot(df) + 
+  geom_boxplot(aes(x = gender, y = average_conversation_length)) +
+  scale_y_continuous(limits = c(0, 50))
+```
+
+```{r}
+ggplot(df) + 
+  geom_violin(aes(x = gender, y = average_conversation_length)) +
+  scale_y_continuous(limits = c(0, 50))
+```
+
+### Conversation Length by Match Percentage
+
+```{r}
+ggplot(df, aes(x = match_p, y = average_conversation_length)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 0) %>%
+ggplot(aes(x = match_p, y = average_conversation_length)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 1) %>%
+ggplot(aes(x = match_p, y = average_conversation_length)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+### Conversation Length by Like Percentage
+
+```{r}
+ggplot(df, aes(x = likes_p, y = average_conversation_length)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 0) %>%
+  ggplot(aes(x = likes_p, y = average_conversation_length)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 1) %>%
+  ggplot(aes(x = match_p, y = average_conversation_length)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+## Conversations Length in Days
+
+### Conversation Length by Gender
+
+```{r}
+ggplot(df) + 
+  geom_boxplot(aes(x = gender, y = average_conversation_length_days)) +
+  scale_y_continuous(limits = c(0, 10))
+```
+
+```{r}
+ggplot(df) + 
+  geom_violin(aes(x = gender, y = average_conversation_length_days)) +
+  scale_y_continuous(limits = c(0, 50))
+```
+
+### Conversation Length by Match Percentage
+
+```{r}
+ggplot(df, aes(x = match_p, y = average_conversation_length_days)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 0) %>%
+ggplot(aes(x = match_p, y = average_conversation_length_days)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 1) %>%
+ggplot(aes(x = match_p, y = average_conversation_length_days)) +
+  geom_smooth(method = "lm", formula= y~x) 
+```
+
+### Conversation Length by Like Percentage
+
+```{r}
+ggplot(df, aes(x = likes_p, y = average_conversation_length_days)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 0) %>%
+  ggplot(aes(x = likes_p, y = average_conversation_length_days)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 1) %>%
+  ggplot(aes(x = match_p, y = average_conversation_length_days)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+## Ghostings
+
+### Ghostings by Gender
+
+```{r}
+df <- mutate(df, ghosting_p = ghostings_after_initial_message/number_of_conversations)
+```
+
+```{r}
+ggplot(df) +
+  geom_boxplot(aes(x = gender, y = ghosting_p))
+```
+
+```{r}
+ggplot(df) +
+  geom_violin(aes(x = gender, y = ghosting_p))
+```
+
+### Ghostings by Match Percentage
+
+```{r}
+ggplot(df, aes(x = match_p, y = ghosting_p)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 0) %>%
+  ggplot(aes(x = match_p, y = ghosting_p)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+```{r}
+filter(df, gender == 1) %>%
+  ggplot(aes(x = match_p, y = ghosting_p)) +
+  geom_smooth(method = "lm", formula= y~x)
+```
+
+## Jobs
+
+```{r}
+jobs_list <- unique(df$job)
+```
+
+```{r}
+df <- df %>%
+  mutate(
+    job_category = case_when(
+      grepl("Firefighter|Security Officer|Police", job, ignore.case = TRUE) ~ "Emergency & Protective Services",
+      grepl("Engineer|Architect|Developer|Designer|Technician|Informatikstudent|Software", job, ignore.case = TRUE) ~ "Tech, Engineering & Design",
+      grepl("Consultant|Manager|Entrepreneur|Business|Operations|Trader|Marketing|Sales|Owner|Investor", job, ignore.case = TRUE) ~ "Business & Finance",
+      grepl("Student|Intern|Research|PhD|Academic", job, ignore.case = TRUE) ~ "Academic & Intern",
+      grepl("Barista|Server|Pizza Maker|Cook", job, ignore.case = TRUE) ~ "Food Service",
+      grepl("Media Analyst|Video Editor|Motion Designer|Content marketing consultant|Photographer", job, ignore.case = TRUE) ~ "Media, Arts & Entertainment",
+      grepl("Analyst|Data|IT|Quant|Computer", job, ignore.case = TRUE) ~ "Data & IT",
+      grepl("Teacher|Educator|Instructor|Tutor|Lecturer|Speech pathologist", job, ignore.case = TRUE) ~ "Education & Instruction",
+      grepl("Medical|Physician|Dental|Healthcare|Nurse", job, ignore.case = TRUE) ~ "Healthcare",
+      is.na(job) ~ "None",
+      TRUE ~ "Other"
+    )
+  )
+```
+
+```{r, fig.width=15, fig.height=6}
+df %>%
+  filter(gender == 0) %>%
+  group_by(job_category) %>%
+  summarise(match_p = mean(match_p, na.rm = TRUE), count = n()) %>%
+  ggplot(aes(x = job_category, y = match_p)) +
+  geom_col() +
+  geom_text(aes(label = count), vjust = -0.5)
+```
+
+```{r, fig.width=15, fig.height=6}
+df %>%
+  filter(gender == 1) %>%
+  group_by(job_category) %>%
+  summarise(match_p = mean(match_p, na.rm = TRUE), count = n()) %>%
+  ggplot(aes(x = job_category, y = match_p)) +
+  geom_col() +
+  geom_text(aes(label = count), vjust = -0.5)
+
+```
+
+# Country
+
+```{r}
+library(forcats)
+
+mapping <- list(
+  "Africa" = c("Morocco", "South Africa", "Réunion", "Canarias"),
+  "Asia" = c("Israel", "Seoul", "Japan", "Taiwan", "Turkey", "Gujarat", "Andhra Pradesh", "Russia", "United Arab Emirates", "Singapore", "北京市", "Jilin", "Seoul", "Incheon", "Hong Kong SAR, China", "Thailand", "Federal Territory of Kuala Lumpur"),
+  "Europe" = c("United Kingdom", "Türkiye", "Norway", "Ireland", "Finland", "England", "Baden-Württemberg", "Niedersachsen", "Nordrhein-Westfalen", "Hessen", "Sachsen", "Bayern", "Schleswig-Holstein", "Rheinland-Pfalz", "Małopolskie", "Dolnośląskie", "Mazowieckie", "Slovakia", "België", "Flanders", "Cluj County", "Județul Iași", "Iași County", "Județul Sibiu", "Stockholm", "Sverige", "Hallands län", "Jönköpings län", "Zuid-Holland", "North Holland", "Gelderland", "Hovedstaden", "Danmark", "Nordjylland", "Grand Est", "Auvergne-Rhône-Alpes", "Lithuania", "Ukraine", "Österreich", "Tyrol", "Schweiz", "Vaud", "Zürich", "Aargau", "Portugal", "Athens", "España", "Catalonia", "País Vasco", "Comunidad de Madrid", "Italia", "Lazio", "Veneto", "Friuli-Venezia Giulia", "Piemonte", "Lombardy", "Česko", "Hlavní město Praha", "Česká republika", "Luxembourg", "Magyarország", "Беларусь", "Latvia", "Scotland", "Zagreb", "Suomi", "Styria", "Эстония", "Belgique", "Slovensko", "Berlin", "Provence-Alpes-Côte d'Azur"),
+  "North America" = c("SD", "NY", "VA", "DC", "CA", "Washington", "PR", "TX", "Nevada", "Hawaii", "Florida", "Oklahoma", "Pennsylvania", "Ohio", "Missouri", "North Carolina", "Alabama", "Wisconsin", "Georgia", "Indiana", "Mississippi", "Arkansas", "Vermont", "Montana", "Louisiana", "Maine", "Connecticut", "Rhode Island", "New Jersey", "Michigan", "Illinois", "New York", "Oregon", "Kansas", "Maryland", "Massachusetts", "Colorado", "New Hampshire", "Arizona", "South Dakota", "District of Columbia", "Alberta", "British Columbia", "Ontario", "Québec", "CDMX", "Jalisco", "Yucatán", "Guatemala", "BC", "Utah"),
+  "South America" = c("Rio Grande do Sul", "Minas Gerais", "Rio de Janeiro", "Santa Catarina", "Pernambuco", "Argentina", "Nariño", "Montevideo Department", "Brasil"),
+  "Oceania" = c("New South Wales", "Victoria", "Western Australia", "Queensland", "Australian Capital Territory", "New Zealand"),
+  "Unidentified" = c("NA", "Re")
+)
+
+df <- df %>%
+  mutate(continent = case_when(
+    country %in% mapping$`Africa` ~ "Africa",
+    country %in% mapping$`Asia` ~ "Asia",
+    country %in% mapping$`Europe` ~ "Europe",
+    country %in% mapping$`North America` ~ "North America",
+    country %in% mapping$`South America` ~ "South America",
+    country %in% mapping$`Oceania` ~ "Oceania",
+    TRUE ~ "Unidentified"
+  ))
+```
+
+```{r}
+select(df, country, continent)
+```
+
+```{r, fig.width=15, fig.height=6}
+df %>%
+  filter(gender == 0) %>%
+  group_by(continent) %>%
+  summarise(match_p = mean(match_p, na.rm = TRUE), count = n()) %>%
+  ggplot(aes(x = continent, y = match_p)) +
+  geom_col() +
+  geom_text(aes(label = count), vjust = -0.5)
+```
+
+```{r, fig.width=15, fig.height=6}
+df %>%
+  filter(gender == 1) %>%
+  group_by(continent) %>%
+  summarise(match_p = mean(match_p, na.rm = TRUE), count = n()) %>%
+  ggplot(aes(x = continent, y = match_p)) +
+  geom_col() +
+  geom_text(aes(label = count), vjust = -0.5)
+```
+
+## Match Percentage Distribution
+
+```{r}
+df %>%
+  filter(gender == 0) %>%
+  mutate(match_pc = percent_rank(match_p)) %>%
+  mutate(match_pc_group = cut(match_pc, breaks = seq(0, 1, by = 0.10))) %>%
+  group_by(match_pc_group) %>%
+  summarise(average_match_p = median(match_p), count = n()) %>%
+  ggplot(aes(x = match_pc_group, y = average_match_p)) +
+  geom_col() +
+  geom_text(aes(label = count), vjust = -0.5)
+```
+
+```{r}
+df %>%
+  filter(gender == 1) %>%
+  mutate(match_pc = percent_rank(match_p)) %>%
+  mutate(match_pc_group = cut(match_pc, breaks = seq(0, 1, by = 0.10))) %>%
+  group_by(match_pc_group) %>%
+  summarise(average_match_p = median(match_p), count = n()) %>%
+  ggplot(aes(x = match_pc_group, y = average_match_p)) +
+  geom_col() +
+  geom_text(aes(label = count), vjust = -0.5)
+```
+
+```{r}
+df_gender_m <- df %>%
+  filter(gender == 0) %>%
+  mutate(
+    match_pc_m = percent_rank(match_p),
+    match_pc_group_m = cut(match_pc_m, breaks = seq(0, 1, by = 0.10))
+  )
+
+df <- df %>%
+  left_join(df_gender_m[, c("id","match_pc_m", "match_pc_group_m")], by = "id")
+```
+
+```{r}
+df_gender_f <- df %>%
+  filter(gender == 1) %>%
+  mutate(
+    match_pc_f= percent_rank(match_p),
+    match_pc_group_f = cut(match_pc_f, breaks = seq(0, 1, by = 0.10))
+  )
+
+df <- df %>%
+  left_join(df_gender_f[, c("id","match_pc_f", "match_pc_group_f")], by = "id")
+```
+
+```{r}
+df
+```
+
+```{r}
+write.csv(df, "phase_1_export.csv", row.names=FALSE)
+```
