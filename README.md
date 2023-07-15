@@ -1,8 +1,6 @@
 # 🔥 Tinder Analysis
 Analysis on a complex dataset of 1200+ tinder profile data.
 
----
-
 ## Phase 1: Basic Analysis (EDA) ✅
 ### 🧰 Skills demondstrated
 - Python json data flattening
@@ -39,16 +37,12 @@ Analysis on a complex dataset of 1200+ tinder profile data.
 ![alt text](tableau_presentation/Final/21.png)
 ![alt text](tableau_presentation/Final/22.png)
 
----
-
 ## Phase 2: Conversation Analysis (NLP)
 
 TBC
 
----
 ## Phase 3: Advanced Analysis (ML)
 
 TBC
 
----
 ## 💟 Data from swipestats.io
