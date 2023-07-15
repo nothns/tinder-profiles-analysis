@@ -1,21 +1,21 @@
-# ?? Tinder Analysis
+# 🔥 Tinder Analysis
 Analysis on a complex dataset of 1200+ tinder profile data.
 
 ---
 
-## Phase 1: Basic Analysis (EDA) ?
-### ??? Skills demondstrated
+## Phase 1: Basic Analysis (EDA) ✅
+### 🧰 Skills demondstrated
 - Python json data flattening
 - MySQL modeling
 - MySQL & Python data cleaning
 - R data wrangling
 - R exploratory data analysis
 - Tableau data visualisation
-### ?? Project flowchart
-![alt text](report_graphics/Process.PNG)
-### ?? Data model
+### ⤵️ Project flowchart
+![alt text](report_graphics/Process.png)
+### 📘 Data model
 ![alt text](report_graphics/Schema.PNG)
-### ?? Visualisation
+### 📈 Visualisation
 ![alt text](tableau_presentation/Final/1.png)
 ![alt text](tableau_presentation/Final/2.png)
 ![alt text](tableau_presentation/Final/3.png)
@@ -41,14 +41,14 @@ Analysis on a complex dataset of 1200+ tinder profile data.
 
 ---
 
-## Phase 2: Conversation Analysis (NLP) ??
+## Phase 2: Conversation Analysis (NLP)
 
 TBC
 
 ---
-## Phase 3: Advanced Analysis (ML) ??
+## Phase 3: Advanced Analysis (ML)
 
 TBC
 
 ---
-## ?? Data from swipestats.io
+## 💟 Data from swipestats.io
