@@ -2,7 +2,7 @@
 Analysis on a complex dataset of 1200+ tinder profile data.
 
 ## Phase 1: Basic Analysis (EDA) ✅
-### 🧰 Skills demondstrated
+### 🧰 Skills demonstrated
 - Python json data flattening
 - MySQL modeling
 - MySQL & Python data cleaning
